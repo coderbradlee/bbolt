@@ -12,37 +12,64 @@ import (
 // flock acquires an advisory lock on a file descriptor.
 func flock(db *DB, exclusive bool, timeout time.Duration) error {
 	var t time.Time
-	if timeout != 0 {
-		t = time.Now()
-	}
-	fmt.Println("flock 18")
-	//fd := db.file.Fd()
-	flag := syscall.LOCK_NB
-	if exclusive {
-		flag |= syscall.LOCK_EX
-	} else {
-		flag |= syscall.LOCK_SH
-	}
-	fmt.Println("flock 26")
 	for {
-		// Attempt to obtain an exclusive lock.
-		err := syscall.Flock(int(db.file.Fd()), flag)
-		fmt.Println("flock 30")
+		// If we're beyond our timeout then return an error.
+		// This can only occur after we've attempted a flock once.
+		if t.IsZero() {
+			t = time.Now()
+		} else if timeout > 0 && time.Since(t) > timeout {
+			return ErrTimeout
+		}
+		flag := syscall.LOCK_SH
+		if exclusive {
+			flag = syscall.LOCK_EX
+		}
+
+		// Otherwise attempt to obtain an exclusive lock.
+		err := syscall.Flock(int(db.file.Fd()), flag|syscall.LOCK_NB)
 		if err == nil {
 			return nil
 		} else if err != syscall.EWOULDBLOCK {
 			return err
 		}
-		fmt.Println("flock 36")
-		// If we timed out then return an error.
-		if timeout != 0 && time.Since(t) > timeout-flockRetryTimeout {
-			return ErrTimeout
-		}
-		fmt.Println("flock 41")
+
 		// Wait for a bit and try again.
-		time.Sleep(flockRetryTimeout)
-		fmt.Println("flock 44")
+		time.Sleep(50 * time.Millisecond)
 	}
+
+
+	//var t time.Time
+	//if timeout != 0 {
+	//	t = time.Now()
+	//}
+	//fmt.Println("flock 18")
+	////fd := db.file.Fd()
+	//flag := syscall.LOCK_NB
+	//if exclusive {
+	//	flag |= syscall.LOCK_EX
+	//} else {
+	//	flag |= syscall.LOCK_SH
+	//}
+	//fmt.Println("flock 26")
+	//for {
+	//	// Attempt to obtain an exclusive lock.
+	//	err := syscall.Flock(int(db.file.Fd()), flag)
+	//	fmt.Println("flock 30")
+	//	if err == nil {
+	//		return nil
+	//	} else if err != syscall.EWOULDBLOCK {
+	//		return err
+	//	}
+	//	fmt.Println("flock 36")
+	//	// If we timed out then return an error.
+	//	if timeout != 0 && time.Since(t) > timeout-flockRetryTimeout {
+	//		return ErrTimeout
+	//	}
+	//	fmt.Println("flock 41")
+	//	// Wait for a bit and try again.
+	//	time.Sleep(flockRetryTimeout)
+	//	fmt.Println("flock 44")
+	//}
 }
 
 // funlock releases an advisory lock on a file descriptor.
