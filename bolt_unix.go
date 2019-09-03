@@ -27,19 +27,21 @@ func flock(db *DB, exclusive bool, timeout time.Duration) error {
 	for {
 		// Attempt to obtain an exclusive lock.
 		err := syscall.Flock(int(fd), flag)
+		fmt.Println("flock 30")
 		if err == nil {
 			return nil
 		} else if err != syscall.EWOULDBLOCK {
 			return err
 		}
-
+		fmt.Println("flock 36")
 		// If we timed out then return an error.
 		if timeout != 0 && time.Since(t) > timeout-flockRetryTimeout {
 			return ErrTimeout
 		}
-
+		fmt.Println("flock 41")
 		// Wait for a bit and try again.
 		time.Sleep(flockRetryTimeout)
+		fmt.Println("flock 44")
 	}
 }
 
