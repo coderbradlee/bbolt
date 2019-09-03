@@ -212,7 +212,7 @@ func Open(path string, mode os.FileMode, options *Options) (*DB, error) {
 		_ = db.close()
 		return nil, err
 	}
-
+	fmt.Println("215")
 	// Lock file so that other processes using Bolt in read-write mode cannot
 	// use the database  at the same time. This would cause corruption since
 	// the two processes would write meta pages and free pages separately.
@@ -224,7 +224,7 @@ func Open(path string, mode os.FileMode, options *Options) (*DB, error) {
 		_ = db.close()
 		return nil, err
 	}
-
+	fmt.Println("227")
 	// Default values for test hooks
 	db.ops.writeAt = db.file.WriteAt
 
@@ -232,7 +232,7 @@ func Open(path string, mode os.FileMode, options *Options) (*DB, error) {
 		// Set the default page size to the OS page size.
 		db.pageSize = defaultPageSize
 	}
-
+	fmt.Println("235")
 	// Initialize the database if it doesn't exist.
 	if info, err := db.file.Stat(); err != nil {
 		_ = db.close()
@@ -265,7 +265,7 @@ func Open(path string, mode os.FileMode, options *Options) (*DB, error) {
 			return nil, ErrInvalid
 		}
 	}
-
+	fmt.Println("269")
 	// Initialize page pool.
 	db.pagePool = sync.Pool{
 		New: func() interface{} {
@@ -278,13 +278,13 @@ func Open(path string, mode os.FileMode, options *Options) (*DB, error) {
 		_ = db.close()
 		return nil, err
 	}
-
+	fmt.Println("281")
 	if db.readOnly {
 		return db, nil
 	}
-
+	fmt.Println("285")
 	db.loadFreelist()
-
+	fmt.Println("287")
 	// Flush freelist when transitioning from no sync to sync so
 	// NoFreelistSync unaware boltdb can open the db later.
 	if !db.NoFreelistSync && !db.hasSyncedFreelist() {
